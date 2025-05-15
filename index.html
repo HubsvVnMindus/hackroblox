@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập & Đăng Ký</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, #6b48ff, #00ddeb);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .form-box {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background: #f5f5f5;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label {
+            top: -10px;
+            left: 10px;
+            font-size: 12px;
+            color: #6b48ff;
+            background: #fff;
+            padding: 0 5px;
+        }
+
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #6b48ff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5439cc;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(107, 72, 255, 0.4);
+        }
+
+        .toggle-link {
+            text-align: center;
+            color: #6b48ff;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .toggle-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="login-form">
+            <h2>Đăng Nhập</h2>
+            <div class="form-box">
+                <div class="input-group">
+                    <input type="email" id="login-email" placeholder=" " required>
+                    <label>Email</label>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="login-password" placeholder=" " required>
+                    <label>Mật khẩu</label>
+                </div>
+                <button class="btn" onclick="login()">Đăng Nhập</button>
+                <p class="error-message" id="login-error"></p>
+                <p class="toggle-link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</p>
+            </div>
+        </div>
+        <div id="register-form" style="display: none;">
+            <h2>Đăng Ký</h2>
+            <div class="form-box">
+                <div class="input-group">
+                    <input type="email" id="register-email" placeholder=" " required>
+                    <label>Email</label>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="register-password" placeholder=" " required>
+                    <label>Mật khẩu</label>
+                </div>
+                <button class="btn" onclick="register()">Đăng Ký</button>
+                <p class="error-message" id="register-error"></p>
+                <p class="toggle-link" onclick="showLogin()">Đã có tài khoản? Đăng nhập</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js"></script>
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQgI2bSyxLX9pcBBUASnPUtHQoQwDoE2Y",
+            authDomain: "login-1e014.firebaseapp.com",
+            projectId: "login-1e014",
+            storageBucket: "login-1e014.firebasestorage.app",
+            messagingSenderId: "920895151351",
+            appId: "1:920895151351:web:4912a5150e11fd5403c7f2"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Show register form
+        function showRegister() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        }
+
+        // Show login form
+        function showLogin() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        }
+
+        // Register function
+        function register() {
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const errorMessage = document.getElementById('register-error');
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    alert('Đăng ký thành công!');
+                    showLogin();
+                })
+                .catch((error) => {
+                    errorMessage.style.display = 'block';
+                    errorMessage.textContent = error.message;
+                });
+        }
+
+        // Login function
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorMessage = document.getElementById('login-error');
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    alert('Đăng nhập thành công!');
+                    // Redirect or handle successful login
+                })
+                .catch((error) => {
+                    errorMessage.style.display = 'block';
+                    errorMessage.textContent = error.message;
+                });
+        }
+    </script>
+</body>
+</html>
