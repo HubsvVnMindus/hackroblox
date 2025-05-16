@@ -32,6 +32,12 @@
             transition: all 0.3s ease;
         }
 
+        .instruction {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
         h2 {
             color: #fff;
             margin-bottom: 20px;
@@ -107,10 +113,12 @@
             background: #ff4d4d;
         }
 
-        .welcome-message {
+        .welcome-screen {
             color: #fff;
             font-size: 36px;
             display: none;
+            flex-direction: column;
+            align-items: center;
             animation: fadeIn 1s ease;
         }
 
@@ -122,13 +130,68 @@
         .hidden {
             display: none;
         }
+
+        /* Hamburger Menu */
+        .hamburger {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 2000;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: #fff;
+            margin: 3px 0;
+            transition: all 0.3s ease;
+        }
+
+        .menu {
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 20px;
+            display: none;
+            z-index: 1500;
+            text-align: left;
+        }
+
+        .menu a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            display: block;
+            padding: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .menu a:hover {
+            color: #00ff88;
+        }
     </style>
 </head>
 <body>
     <div class="container" id="authContainer">
+        <div class="instruction">Vui lòng nhập email hoặc tên</div>
         <h2 id="formTitle">Đăng nhập</h2>
         <div class="input-group">
             <input type="text" id="username" placeholder="Tên đăng nhập" required>
+        </div>
+        <div class="input-group" id="emailGroup">
+            <input type="email" id="email" placeholder="Email" required>
         </div>
         <div class="input-group">
             <input type="password" id="password" placeholder="Mật khẩu" required>
@@ -137,17 +200,32 @@
         <span class="switch" onclick="toggleForm()">Chưa có tài khoản? Đăng ký</span>
     </div>
 
-    <div class="welcome-message" id="welcomeMessage">Welcome</div>
+    <div class="welcome-screen" id="welcomeScreen">
+        <div>Welcome</div>
+    </div>
+
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="menu" id="menu">
+        <a href="#" onclick="logout()">Đăng xuất</a>
+    </div>
+
     <div class="notification" id="notification"></div>
 
     <script>
         let isLogin = true;
+        let isLoggedIn = false;
 
         function toggleForm() {
             isLogin = !isLogin;
             document.getElementById('formTitle').textContent = isLogin ? 'Đăng nhập' : 'Đăng ký';
             document.querySelector('.modern-btn').textContent = isLogin ? 'Đăng nhập' : 'Đăng ký';
             document.querySelector('.switch').textContent = isLogin ? 'Chưa có tài khoản? Đăng ký' : 'Đã có tài khoản? Đăng nhập';
+            document.getElementById('emailGroup').style.display = isLogin ? 'none' : 'block';
         }
 
         function showNotification(message, type) {
@@ -160,31 +238,67 @@
             }, 3000);
         }
 
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
         function handleAuth() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
 
-            if (!username || !password) {
+            if (!username || !password || (!isLogin && !email)) {
                 showNotification('Vui lòng điền đầy đủ thông tin', 'error');
                 return;
             }
 
-            // Giả lập kiểm tra đăng nhập/đăng ký
+            if (!isLogin && !validateEmail(email)) {
+                showNotification('Email không hợp lệ', 'error');
+                return;
+            }
+
             if (isLogin) {
-                // Logic đăng nhập (giả lập)
+                // Giả lập đăng nhập
                 if (username === 'admin' && password === '123456') {
                     showNotification('Đăng nhập thành công', 'success');
                     document.getElementById('authContainer').classList.add('hidden');
-                    document.getElementById('welcomeMessage').style.display = 'block';
+                    document.getElementById('welcomeScreen').style.display = 'flex';
+                    document.getElementById('hamburger').style.display = 'flex';
+                    isLoggedIn = true;
                 } else {
                     showNotification('Tên đăng nhập hoặc mật khẩu sai', 'error');
                 }
             } else {
-                // Logic đăng ký (giả lập)
+                // Giả lập đăng ký
                 showNotification('Đăng ký thành công', 'success');
-                toggleForm(); // Chuyển về form đăng nhập
+                toggleForm();
+                document.getElementById('username').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
             }
         }
+
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function logout() {
+            showNotification('Đăng xuất thành công', 'success');
+            document.getElementById('authContainer').classList.remove('hidden');
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('hamburger').style.display = 'none';
+            document.getElementById('menu').style.display = 'none';
+            isLoggedIn = false;
+            document.getElementById('username').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Ẩn trường email và hamburger khi khởi động
+        document.getElementById('emailGroup').style.display = 'none';
+        document.getElementById('hamburger').style.display = 'none';
     </script>
 </body>
-            </html>
+        </html>
